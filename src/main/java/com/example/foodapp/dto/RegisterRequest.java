@@ -3,14 +3,14 @@ package com.example.foodapp.dto;
 /**
  * Data needed to register a new user.
  */
-public class CreateUserRequest {
+public class RegisterRequest {
     private String username;
     private String password;
     private String email;
 
-    public CreateUserRequest() { }
+    public RegisterRequest() { }
 
-    public CreateUserRequest(String username, String password, String email) {
+    public RegisterRequest(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email    = email;

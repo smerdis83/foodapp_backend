@@ -1,7 +1,8 @@
 package com.example.foodapp;
 
 import com.example.foodapp.config.HibernateUtil;
-import com.example.foodapp.controller.UserHandler;
+import com.example.foodapp.controller.ProfileHandler;
+import com.example.foodapp.controller.AuthHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import java.net.InetSocketAddress;
@@ -14,7 +15,9 @@ public class App {
 
         // 2) start HTTP server on port 8000
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/users", new UserHandler());
+        server.createContext("/auth/register", new AuthHandler());
+        server.createContext("/auth/login",    new AuthHandler());
+        server.createContext("/auth/profile",  new ProfileHandler());
         server.setExecutor(Executors.newFixedThreadPool(8));
         server.start();
 
