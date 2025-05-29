@@ -1,59 +1,64 @@
 package com.example.foodapp.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
- * Response returned after successful register or login.
- * Contains the JWT token and basic user info.
+ * Response returned after register or login operations
  */
 public class AuthResponse {
-    private String token;     // JWT to authenticate future requests
-    private int id;           // user’s unique identifier
-    private String username;  // user’s username
-    private String email;     // user’s email address
+    private String message;
+    private String token;
+    @JsonProperty("user_id")
+    private String userId;
+    private UserResponse user;
 
     /** No-arg constructor needed by Jackson */
     public AuthResponse() { }
 
     /**
      * Full constructor
-     * @param token    the JWT token
-     * @param id       the user’s id
-     * @param username the user’s username
-     * @param email    the user’s email
+     * @param message the message
+     * @param token   the JWT token
+     * @param userId  the user’s id
+     * @param user    the user response
      */
-    public AuthResponse(String token, int id, String username, String email) {
-        this.token    = token;
-        this.id       = id;
-        this.username = username;
-        this.email    = email;
+    public AuthResponse(String message, String token, String userId, UserResponse user) {
+        this.message = message;
+        this.token = token;
+        this.userId = userId;
+        this.user = user;
     }
 
-    // getters and setters
+    // Getters and setters
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
     public String getToken() {
         return token;
     }
+
     public void setToken(String token) {
         this.token = token;
     }
 
-    public int getId() {
-        return id;
-    }
-    public void setId(int id) {
-        this.id = id;
+    public String getUserId() {
+        return userId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public String getEmail() {
-        return email;
+    public UserResponse getUser() {
+        return user;
     }
-    public void setEmail(String email) {
-        this.email = email;
+
+    public void setUser(UserResponse user) {
+        this.user = user;
     }
 }

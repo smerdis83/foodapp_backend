@@ -15,9 +15,14 @@ public class App {
 
         // 2) start HTTP server on port 8000
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/auth/register", new AuthHandler());
-        server.createContext("/auth/login",    new AuthHandler());
-        server.createContext("/auth/profile",  new ProfileHandler());
+        
+        // Auth endpoints
+        AuthHandler authHandler = new AuthHandler();
+        server.createContext("/auth/register", authHandler);
+        server.createContext("/auth/login", authHandler);
+        server.createContext("/auth/check-phone", authHandler);
+        server.createContext("/auth/profile", new ProfileHandler());
+        
         server.setExecutor(Executors.newFixedThreadPool(8));
         server.start();
 

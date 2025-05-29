@@ -1,75 +1,134 @@
 package com.example.foodapp.service;
 
 import com.example.foodapp.dto.RegisterRequest;
-import com.example.foodapp.dto.UserResponse;
-import com.example.foodapp.dto.AuthResponse;
 import com.example.foodapp.dto.LoginRequest;
-import com.example.foodapp.security.JwtUtil;
+import com.example.foodapp.dto.AuthResponse;
+import com.example.foodapp.dto.UserResponse;
 import com.example.foodapp.model.User;
+import com.example.foodapp.model.BankInfoEmbeddable;
 import com.example.foodapp.repository.UserRepository;
-
+import com.example.foodapp.security.JwtUtil;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * Business logic around user operations.
+ * Business logic around user operations: register, login, profile lookup.
  */
 public class UserService {
     private final UserRepository repo = new UserRepository();
 
     /**
+     * Check if a phone number is already registered.
+     * @param phone the phone number to check
+     * @return true if the phone number exists, false otherwise
+     */
+    public boolean existsByPhone(String phone) {
+        return repo.existsByPhone(phone);
+    }
+
+    /**
      * Register a new user.
+     * @param req the registration request containing user details
+     * @return AuthResponse with JWT token and user info
+     * @throws IllegalArgumentException if validation fails
      */
     public AuthResponse register(RegisterRequest req) {
-        // ۱. بررسی یکتا بودن
-        if (repo.existsByUsername(req.getUsername())) {
-            throw new IllegalArgumentException("Username already taken");
+        // Validate unique constraints
+        if (repo.existsByPhone(req.getPhone())) {
+            throw new IllegalArgumentException("Phone number already taken");
         }
-        if (repo.existsByEmail(req.getEmail())) {
+        if (req.getEmail() != null && repo.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("Email already taken");
         }
-        // ۲. ذخیرهٔ کاربر
-        User u = new User(req.getUsername(), req.getPassword(), req.getEmail());
-        User saved = repo.save(u);
-        // ۳. تولید توکن
+
+        // Convert bank info if present
+        BankInfoEmbeddable bankInfo = null;
+        if (req.getBankInfo() != null) {
+            bankInfo = new BankInfoEmbeddable();
+            bankInfo.setBankName(req.getBankInfo().getBankName());
+            bankInfo.setAccountNumber(req.getBankInfo().getAccountNumber());
+        }
+
+        // Create and save user
+        User user = new User(
+            req.getFullName(),
+            req.getPhone(),
+            req.getEmail(),
+            req.getPassword(), // Store password directly for now
+            req.getRole(),
+            req.getAddress(),
+            req.getProfileImageBase64(),
+            bankInfo
+        );
+
+        User saved = repo.save(user);
+
+        // Generate JWT token
         String token = JwtUtil.generateToken(saved.getId());
-        // ۴. برگرداندن پاسخ
+
+        // Return response
         return new AuthResponse(
-                token,
-                saved.getId(),
-                saved.getUsername(),
-                saved.getEmail()
+            "Registration successful",
+            token,
+            String.valueOf(saved.getId()),
+            toUserResponse(saved)
         );
     }
 
+    /**
+     * Authenticate a user.
+     * @param req the login request with phone and password
+     * @return AuthResponse with JWT token and user info
+     * @throws IllegalArgumentException if credentials are invalid
+     */
     public AuthResponse login(LoginRequest req) {
-        // در repo متدی بنویس existsByUsernameAndPassword یا fetchByUsername و سپس چک پسورد
-        User u = repo.findByUsername(req.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Bad credentials"));
-        if (!u.getPasswordHash().equals(req.getPassword())) {
-            throw new IllegalArgumentException("Bad credentials");
+        // Find user by phone
+        User user = repo.findByPhone(req.getPhone())
+            .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+
+        // Verify password (storing raw password for now)
+        if (!user.getPasswordHash().equals(req.getPassword())) {
+            throw new IllegalArgumentException("Invalid credentials");
         }
-        String token = JwtUtil.generateToken(u.getId());
-        return new AuthResponse(token, u.getId(), u.getUsername(), u.getEmail());
+
+        // Generate JWT token
+        String token = JwtUtil.generateToken(user.getId());
+
+        // Return response
+        return new AuthResponse(
+            "Login successful",
+            token,
+            String.valueOf(user.getId()),
+            toUserResponse(user)
+        );
     }
 
     /**
-     * Get a user by id.
+     * Get user profile by ID.
+     * @param id the user ID
+     * @return Optional<UserResponse> containing user data if found
      */
     public Optional<UserResponse> getById(int id) {
         return repo.findById(id)
-                .map(this::mapToResponse);
+            .map(this::toUserResponse);
     }
 
     /**
-     * Convert User entity to DTO.
+     * Convert User entity to UserResponse DTO.
      */
-    private UserResponse mapToResponse(User u) {
+    private UserResponse toUserResponse(User u) {
         return new UserResponse(
-                u.getId(),
-                u.getUsername(),
-                u.getEmail(),
-                u.getCreatedAt() != null ? u.getCreatedAt() : LocalDateTime.now()
+            u.getId(),
+            u.getFullName(),
+            u.getPhone(),
+            u.getEmail(),
+            u.getRole(),
+            u.getAddress(),
+            u.getProfileImageBase64(),
+            u.getBankInfo() != null ? new com.example.foodapp.dto.BankInfo(
+                u.getBankInfo().getBankName(),
+                u.getBankInfo().getAccountNumber()
+            ) : null
         );
     }
 }

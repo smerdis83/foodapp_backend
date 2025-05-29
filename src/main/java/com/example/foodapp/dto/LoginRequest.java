@@ -4,29 +4,29 @@ package com.example.foodapp.dto;
  * Request sent by client to log in a user.
  */
 public class LoginRequest {
-    private String username;  // user’s username
-    private String password;  // user’s password
+    private String phone;
+    private String password;
 
     /** No-arg constructor needed by Jackson */
     public LoginRequest() { }
 
     /**
      * Full constructor
-     * @param username the user’s username
+     * @param phone the user’s phone
      * @param password the user’s password
      */
-    public LoginRequest(String username, String password) {
-        this.username = username;
+    public LoginRequest(String phone, String password) {
+        this.phone = phone;
         this.password = password;
     }
 
     // getters and setters
 
-    public String getUsername() {
-        return username;
+    public String getPhone() {
+        return phone;
     }
-    public void setUsername(String username) {
-        this.username = username;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getPassword() {
